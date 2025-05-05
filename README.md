@@ -17,9 +17,8 @@ Apply a Deep Learning Algorithm on TensorFlow using Keras API in a real-world pr
 2. Prepare a PowerPoint presentation which includes the following aspects of the project:
     - Project Title, Purpose and Features/Functionalities.
     - Description of the major parts of the Source Code, highlighting important code snippets.
-
-1. Demonstration of the (running) Jupyter Notebook and web app.
-2. Upload your PowerPoint file and Project `.zip` file in the PTF Class in MS Teams (`PTF04 – Final Projects`)
+3. Demonstration of the (running) Jupyter Notebook and web app.
+4. Upload your PowerPoint file and Project `.zip` file in the PTF Class in MS Teams (`PTF04 – Final Projects`)
 
 ### Note
 
