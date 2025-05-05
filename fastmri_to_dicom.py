@@ -22,15 +22,23 @@ def fastmri_to_dicom(filename: Path,
     patientName = fileparts[0]
     f = h5py.File(filename,'r')
 
+    # Ensure outfolder is a Path object
+    if not isinstance(outfolder, Path):
+        outfolder = Path(outfolder)
+
     if not outfolder:
         outfolder = Path(patientName)
         outfolder.mkdir(parents=bool, exist_ok=True)
+
+    # Ensure the output folder exists
+    outfolder.mkdir(parents=True, exist_ok=True)
 
     if 'ismrmrd_header' not in f.keys():
         raise Exception('ISMRMRD header not found in file')
 
     if reconstruction_name not in f.keys():
-        raise Exception('Reconstruction name not found in file')
+        available_keys = list(f.keys())
+        raise Exception(f"Reconstruction name '{reconstruction_name}' not found in file. Available keys: {available_keys}")
 
     # Get some header information
     head = xmltodict.parse(f['ismrmrd_header'][()])
@@ -46,6 +54,11 @@ def fastmri_to_dicom(filename: Path,
 
     # Get and prep pixel data
     img_data = f[reconstruction_name][:]
+
+    # Convert complex data to magnitude
+    if np.iscomplexobj(img_data):
+        img_data = np.abs(img_data)
+
     slices = img_data.shape[0]
 
     if flip_left_right:
@@ -130,7 +143,8 @@ def fastmri_to_dicom(filename: Path,
         ds.StudyStatusID = 'COMPLETED'
         ds.ResultsID = ''
 
-        ds.PixelData = slice_pixels
+        # Convert slice_pixels to bytes before assigning to PixelData
+        ds.PixelData = slice_pixels.tobytes()
 
         ds.file_meta = file_meta
         ds.is_implicit_VR = False
@@ -139,18 +153,36 @@ def fastmri_to_dicom(filename: Path,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description='Convert fastMRI file to DICOMs')
-    parser.add_argument('--filename' , type=str, help='File name', required=True)
+    parser.add_argument('--filename', type=str, help='File name', required=False)
     parser.add_argument('--reconstruction_name' , type=str, help='Reconstruction name', default='reconstruction_rss', required=False)
     parser.add_argument('--outfolder', type=str, help='Output folder', required = False)
     parser.add_argument('--flip_up_down', type=bool, help='Flip image up/down', default=True)
     parser.add_argument('--flip_left_right', type=bool, help='Flip image left/right', default=False)
+    parser.add_argument('--input_dir', type=str, help='Input directory containing H5 files', required=False)
+
     args = parser.parse_args()
 
-    fastmri_to_dicom(filename = Path(args.filename),
-        reconstruction_name=args.reconstruction_name,
-        outfolder=args.outfolder,
-        flip_up_down=args.flip_up_down,
-        flip_left_right=args.flip_left_right)
+    if not args.input_dir and not args.filename:
+        parser.error("Either --input_dir or --filename must be provided.")
+
+    if args.input_dir:
+        input_dir = Path(args.input_dir)
+        if not input_dir.is_dir():
+            raise ValueError(f"The provided input directory {args.input_dir} is not valid.")
+
+        for h5_file in input_dir.glob('*.h5'):
+            print(f"Processing file: {h5_file}")
+            fastmri_to_dicom(filename=h5_file,
+                            reconstruction_name=args.reconstruction_name,
+                            outfolder=args.outfolder,
+                            flip_up_down=args.flip_up_down,
+                            flip_left_right=args.flip_left_right)
+    else:
+        fastmri_to_dicom(filename=Path(args.filename),
+                        reconstruction_name=args.reconstruction_name,
+                        outfolder=args.outfolder,
+                        flip_up_down=args.flip_up_down,
+                        flip_left_right=args.flip_left_right)
 
 if __name__ == '__main__':
     main()
