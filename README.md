@@ -14,7 +14,7 @@ This project is the final requirement for the PTF04 course. It is designed to de
     ```
 2. Navigate to the project directory:
     ```bash
-    cd PTF04-Final-Requirement
+    cd ptf04-Final-Requirement
     ```
 3. Install dependencies:
     ```bash
