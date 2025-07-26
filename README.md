@@ -1,4 +1,5 @@
-# PTF04 Final Requirement
+# 
+Knee MRI Pathology Identification Model
 
 ## Project Overview
 This project is the final requirement for the PTF04 course. It is designed to demonstrate the application of programming concepts, problem-solving skills, and software development practices learned throughout the course.
